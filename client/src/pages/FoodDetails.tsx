@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -21,7 +21,7 @@ import Layout from '@/components/common/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockFoods } from '@/data/mockData';
+import { foodAPI, Food } from '@/services/api';
 import { useCart } from '@/context/CartContext';
 import { useHealth } from '@/context/HealthContext';
 import { toast } from 'sonner';
@@ -33,8 +33,37 @@ const FoodDetails: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
   const { profile, checkFoodSafety } = useHealth();
+  const [food, setFood] = useState<Food | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const food = mockFoods.find((f) => f.id === id);
+  useEffect(() => {
+    const fetchFood = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const response = await foodAPI.getById(id);
+        setFood(response.data);
+      } catch (error) {
+        console.error('Failed to fetch food:', error);
+        setFood(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFood();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading food details...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!food) {
     return (

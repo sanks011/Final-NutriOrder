@@ -62,7 +62,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     cartAPI
       .get()
-      .then((res) => setItems(res.data.items || []))
+      .then((res) => {
+        setItems(res.data.items || []);
+      })
       .catch(() => setItems([]));
   }, [user]);
 

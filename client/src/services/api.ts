@@ -92,8 +92,38 @@ api.interceptors.request.use(
    RESPONSE INTERCEPTOR (FIXED)
 ========================= */
 
+// Helper function to normalize MongoDB documents
+const normalizeMongoDocument = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') return obj;
+  
+  if (Array.isArray(obj)) {
+    return obj.map(normalizeMongoDocument);
+  }
+  
+  const normalized: any = {};
+  for (const key in obj) {
+    if (!obj.hasOwnProperty(key)) continue; // Skip inherited properties
+    
+    if (key === '_id') {
+      normalized.id = obj[key];
+      normalized._id = obj[key];
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      normalized[key] = normalizeMongoDocument(obj[key]);
+    } else {
+      normalized[key] = obj[key];
+    }
+  }
+  return normalized;
+};
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Normalize MongoDB documents in response data
+    if (response.data) {
+      response.data = normalizeMongoDocument(response.data);
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       const token = localStorage.getItem("fiteats_token");

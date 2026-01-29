@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -25,7 +25,8 @@ import Layout from '@/components/common/Layout';
 import FoodCard from '@/components/food/FoodCard';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { mockFoods, mockRestaurants } from '@/data/mockData';
+import { foodAPI, Food } from '@/services/api';
+import { mockRestaurants } from '@/data/mockData';
 import PromoBanner from '@/components/home/PromoBanner';
 import RecommendationsSection from '@/components/home/RecommendationsSection';
 
@@ -69,6 +70,24 @@ const Index: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('alden-bridge');
   const [selectedMenuCategory, setSelectedMenuCategory] = useState('healthy-bowls');
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFoods = async () => {
+      try {
+        setLoading(true);
+        const response = await foodAPI.getAll();
+        setFoods(response.data);
+      } catch (error) {
+        console.error('Failed to fetch foods:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFoods();
+  }, []);
 
   const currentLocation = locations.find(l => l.id === selectedLocation) || locations[0];
 
@@ -380,9 +399,9 @@ const Index: React.FC = () => {
 
           {/* Menu Items Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {mockFoods.slice(0, 4).map((food, index) => (
+            {foods.slice(0, 4).map((food, index) => (
               <motion.div
-                key={food.id}
+                key={food._id || food.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -431,9 +450,9 @@ const Index: React.FC = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockFoods.slice(0, 3).map((food, index) => (
+            {foods.slice(0, 3).map((food, index) => (
               <motion.div
-                key={food.id}
+                key={food._id || food.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}

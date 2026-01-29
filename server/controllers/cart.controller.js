@@ -12,6 +12,9 @@ exports.getCart = async (req, res) => {
       cart = await Cart.create({ user: req.user.id, items: [] });
     }
 
+    // Build response with populated items
+    let populatedItems = [];
+
     // If there are items, manually populate them
     if (cart.items && cart.items.length > 0) {
       const Food = require("../models/Food");
@@ -32,19 +35,31 @@ exports.getCart = async (req, res) => {
         // Map foods back to cart items
         const foodMap = new Map();
         foods.forEach(food => {
-          foodMap.set(food._id.toString(), food);
+          foodMap.set(food._id.toString(), food.toObject());
         });
 
-        cart.items = cart.items
-          .map(item => ({
-            ...item,
-            food: foodMap.get(item.food) || null
-          }))
-          .filter(item => item.food !== null); // Remove items with missing food
+        populatedItems = cart.items
+          .map(item => {
+            const foodData = foodMap.get(item.food);
+            if (!foodData) return null;
+            
+            return {
+              food: foodData,
+              quantity: item.quantity
+            };
+          })
+          .filter(item => item !== null); // Remove items with missing food
       }
     }
 
-    res.json(cart);
+    // Return properly structured response
+    res.json({
+      _id: cart._id,
+      user: cart.user,
+      items: populatedItems,
+      createdAt: cart.createdAt,
+      updatedAt: cart.updatedAt
+    });
   } catch (err) {
     console.error("❌ GET CART ERROR:", err.message);
     res.status(500).json({ message: "Failed to fetch cart", error: err.message });
@@ -138,6 +153,9 @@ exports.updateCart = async (req, res) => {
 
     console.log("✅ Cart updated successfully");
 
+    // Build response with populated items
+    let populatedItems = [];
+
     // Manually populate the foods
     const Food = require("../models/Food");
     
@@ -155,19 +173,31 @@ exports.updateCart = async (req, res) => {
 
         const foodMap = new Map();
         foods.forEach(food => {
-          foodMap.set(food._id.toString(), food);
+          foodMap.set(food._id.toString(), food.toObject());
         });
 
-        cart.items = cart.items
-          .map(item => ({
-            ...item,
-            food: foodMap.get(item.food) || null
-          }))
-          .filter(item => item.food !== null);
+        populatedItems = cart.items
+          .map(item => {
+            const foodData = foodMap.get(item.food);
+            if (!foodData) return null;
+            
+            return {
+              food: foodData,
+              quantity: item.quantity
+            };
+          })
+          .filter(item => item !== null);
       }
     }
 
-    res.json(cart);
+    // Return properly structured response
+    res.json({
+      _id: cart._id,
+      user: cart.user,
+      items: populatedItems,
+      createdAt: cart.createdAt,
+      updatedAt: cart.updatedAt
+    });
   } catch (err) {
     console.error("❌ CART UPDATE ERROR:", {
       message: err.message,

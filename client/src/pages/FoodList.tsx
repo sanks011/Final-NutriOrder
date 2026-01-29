@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Grid3X3, 
@@ -25,7 +25,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { mockFoods } from '@/data/mockData';
+import { foodAPI, Food } from '@/services/api';
 import { useHealth } from '@/context/HealthContext';
 
 interface Filters {
@@ -45,6 +45,8 @@ const FoodList: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const { profile, checkFoodSafety } = useHealth();
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const [filters, setFilters] = useState<Filters>({
     search: '',
@@ -58,6 +60,22 @@ const FoodList: React.FC = () => {
     isKeto: false,
     showSafeOnly: false,
   });
+
+  useEffect(() => {
+    const fetchFoods = async () => {
+      try {
+        setLoading(true);
+        const response = await foodAPI.getAll();
+        setFoods(response.data);
+      } catch (error) {
+        console.error('Failed to fetch foods:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFoods();
+  }, []);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -74,7 +92,7 @@ const FoodList: React.FC = () => {
   }, [filters]);
 
   const filteredFoods = useMemo(() => {
-    return mockFoods.filter((food) => {
+    return foods.filter((food) => {
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         if (
@@ -103,7 +121,7 @@ const FoodList: React.FC = () => {
 
       return true;
     });
-  }, [filters, checkFoodSafety]);
+  }, [foods, filters, checkFoodSafety]);
 
   const resetFilters = () => {
     setFilters({
@@ -292,6 +310,15 @@ const FoodList: React.FC = () => {
   return (
     <Layout>
       <PageTransition>
+        {loading ? (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading delicious foods...</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Hero Banner */}
         <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-accent py-12 md:py-16">
           {/* Background decorations */}
@@ -520,7 +547,7 @@ const FoodList: React.FC = () => {
                     >
                       {filteredFoods.map((food, index) => (
                         <motion.div
-                          key={food.id}
+                          key={food._id || food.id}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.05 }}
@@ -535,6 +562,8 @@ const FoodList: React.FC = () => {
             </div>
           </div>
         </div>
+        </>
+        )}
       </PageTransition>
     </Layout>
   );

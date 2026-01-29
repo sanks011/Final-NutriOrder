@@ -19,8 +19,9 @@ const FoodCard: React.FC<FoodCardProps> = ({ food, showNutrition = true, variant
   const { checkFoodSafety } = useHealth();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
+  const foodId = food._id || food.id;
   const safety = checkFoodSafety(food);
-  const isWishlisted = isInWishlist(food.id);
+  const isWishlisted = isInWishlist(foodId);
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -39,7 +40,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ food, showNutrition = true, variant
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -2 }}
-        onClick={() => navigate(`/foods/${food.id}`)}
+        onClick={() => navigate(`/foods/${foodId}`)}
         className="warm-card cursor-pointer p-3 flex gap-3 group"
       >
         <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-sage-light">
@@ -67,7 +68,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ food, showNutrition = true, variant
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -6 }}
-        onClick={() => navigate(`/foods/${food.id}`)}
+        onClick={() => navigate(`/foods/${foodId}`)}
         className={`food-card-sage cursor-pointer group overflow-hidden ${
           !safety.isSafe ? 'ring-2 ring-destructive/30' : ''
         }`}
@@ -171,7 +172,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ food, showNutrition = true, variant
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      onClick={() => navigate(`/foods/${food.id}`)}
+      onClick={() => navigate(`/foods/${foodId}`)}
       className={`food-card cursor-pointer group ${
         !safety.isSafe ? 'ring-2 ring-destructive/30' : ''
       }`}
